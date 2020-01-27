@@ -2,29 +2,28 @@ import requests as r
 import time
 import json
 
+def get_page_json(category=str, offset=0) -> json:
+    url = "https://www.canadahelps.org/en/search/charities/?category=%s&offset=%d" % (category, offset)
+    print(f"Getting: {url}")
+    response = r.get(url)
+    return response.json()
+
 categories = ['animals']
 dictionary = {}
-url = "https://www.canadahelps.org/en/search/charities/?category={category}&offset={number}"
 
 for category in categories:
-	base = r.get(url.format(category=category, number=str(0))).json()
-	print(url.format(category=category, number=str(0)))
-	print(base)
-	n = base['count']
-	i=0
-	j=1
+    base_count = get_page_json(category)['count']
+    print(f"Base Count:\n{base_count}")
+    dictionary[category] = list()
+    offset = 0
 
-	while i<n:
-		print(i)
-		print(url.format(category=category, number=str(0)))
-		dictionary[category] = dict({str(j):r.get(url=url.format(category=str(category), number=str(i))).json()})
-		print(dictionary)
-		time.sleep(2)
-		if i == 40:
-			break
-		i += 20
-		j += 1
+    while offset < base_count:
+        results = get_page_json(category, offset)['results']
+        for item in results:
+            dictionary[category].append(item)
+        offset += 20
 
-with open('data.txt', 'w') as outfile:
-	dictionary = json.dumps(dictionary, sort_keys=True, indent=4)
-	json.dump(dictionary, outfile)
+    print(len(dictionary[category]))
+
+with open('datag.txt', 'w') as outfile:
+    json.dump(dictionary, outfile, indent=4, sort_keys=True)
